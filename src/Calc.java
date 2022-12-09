@@ -3,7 +3,6 @@ import java.util.Scanner;
 class Calc {
 
     public static void main(String[] args) throws Exception {
-//        Roman.isRoman("2");
         Scanner scanner = new Scanner(System.in);
         System.out.println("Введите два числа (арабских или римских): ");
         String expression = scanner.nextLine();
