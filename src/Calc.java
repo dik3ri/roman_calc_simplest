@@ -1,76 +1,121 @@
 import java.util.Scanner;
 
 class Calc {
-
     public static void main(String[] args) throws Exception {
+        System.out.println("Калькулятор");
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Введите два числа (арабских или римских): ");
+        System.out.print("\nВведите выражение (арабские или римские): ");
         String expression = scanner.nextLine();
-        System.out.println(parse(expression));
+        System.out.println(calc(expression));
     }
 
-    public static String parse(String expression) throws Exception {
-        int num1;
-        int num2;
-        String oper;
-        String result;
-        boolean isRoman;
-        String[] operands = expression.split("[+\\-*/]");
-        if (operands.length != 2) throw new Exception("Должно быть два операнда");
-        oper = detectOperation(expression);
-        if (oper == null) throw new Exception("Неподдерживаемая математическая операция");
-        //если оба числа римские
-        if (Roman.isRoman(operands[0]) && Roman.isRoman(operands[1])) {
-            //конвертируем оба числа в арабские для вычесления действия
-            num1 = Roman.convertToArabian(operands[0]);
-            num2 = Roman.convertToArabian(operands[1]);
-            isRoman = true;
+    private static String calc(String expression) throws Exception {
+        boolean isRoman = false;
+        int a, b, arabian, res = 0;
+        String resArabian = "";
+        String returnRes = "";
+        expression = expression.trim().replace(" ","");
+
+
+        // Сколько ввел операндов пользователь
+        String [] expressionArr = expression.split("[+\\-*/]");
+        if(expressionArr.length != 2) {
+            throw new Exception("Должно быть два операнда");
         }
-        //если оба числа арабские
-        else if (!Roman.isRoman(operands[0]) && !Roman.isRoman(operands[1])) {
-            num1 = Integer.parseInt(operands[0]);
-            num2 = Integer.parseInt(operands[1]);
-            isRoman = false;
+
+
+        // Проверка на знак
+        String sign = toCheckSign(expression);
+        if(sign == null){
+            throw new Exception("Вы ввели неверный знак");
         }
-        //если одни число римское, а другое - арабское
-        else {
-            throw new Exception("Числа должны быть в одном формате");
-        }
-        if (num1 > 10 || num2 > 10) {
-            throw new Exception("Числа должны быть от 1 до 10");
-        }
-        int arabian = calc(num1, num2, oper);
-        if (isRoman) {
-            //если римское число получилось меньше либо равно нулю, генерируем ошибку
-            if (arabian <= 0) {
-                throw new Exception("Римское число должно быть больше нуля");
+
+        //Проверка на числа(Пользователь может ввести бувку/слово вместо числа)
+        for(int i = 0; i < expressionArr.length; i++){
+            if(!isNumeric(expressionArr[i])){
+                throw new Exception("Ввели некорректное выражение");
             }
-            //конвертируем результат операции из арабского в римское
-            result = Roman.convertToRoman(arabian);
-        } else {
-            //Конвертируем арабское число в тип String
-            result = String.valueOf(arabian);
         }
-        //возвращаем результат
-        return result;
+
+        // Проверяем, чтобы все числа были одного формата (Арабские или Римские), а также конвентируем римские в арабские для решения
+        if(Roman.isRoman(expressionArr[0]) && Roman.isRoman(expressionArr[1])){
+            a = Roman.convertToArabian(expressionArr[0]);
+            b = Roman.convertToArabian(expressionArr[1]);
+            isRoman = true;
+        } else if(!Roman.isRoman(expressionArr[0]) && !Roman.isRoman(expressionArr[1])){
+            a = Integer.parseInt(expressionArr[0]);
+            b = Integer.parseInt(expressionArr[1]);
+            isRoman = false;
+        } else {
+            // Если одно число римское, а другое арабское
+            throw new Exception("Все числа должны быть в одном формате");
+        }
+
+        // Решение выражения
+        switch (sign){
+            case "+":
+                res = a + b;
+                break;
+            case "-":
+                res = a - b;
+                break;
+            case "*":
+                res = a * b;
+                break;
+            case "/":
+                res = a / b;
+                break;
+            default:
+                throw new Exception("Ошибка в выражении");
+        }
+        if(isRoman == false){
+            if(a > 10 || b > 10){
+                throw new Exception("Числа должны быть от 1 до 10");
+            }
+            returnRes = String.valueOf(res);
+
+        } else{
+            if(a > 10 || b > 10){
+                throw new Exception("Числа должны быть от I до X");
+            } else {
+                if (isRoman) {
+                    //если римское число получилось меньше либо равно нулю, генерируем ошибку
+                    if (res <= 0) {
+                        throw new Exception("Римское число должно быть больше нуля");
+                    } else {
+                        //конвертируем результат операции из арабского в римское
+                        resArabian = Roman.convertToRoman(res);
+                        //Конвертируем арабское число в тип String
+                        returnRes = resArabian;
+                    }
+                }
+            }
+        }
+
+        return "Ответ: " + returnRes;
+    }
+    private static String toCheckSign(String expression) {
+        if(expression.contains("+")){
+            return "+";
+        } else if(expression.contains("-")){
+            return "-";
+        } else if(expression.contains("*")){
+            return "*";
+        } else if(expression.contains("/")){
+            return "/";
+        } else {
+            return null;
+        }
     }
 
-    static String detectOperation(String expression) {
-        if (expression.contains("+")) return "+";
-        else if (expression.contains("-")) return "-";
-        else if (expression.contains("*")) return "*";
-        else if (expression.contains("/")) return "/";
-        else return null;
+    public static boolean isNumeric(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
-
-    static int calc(int a, int b, String oper) {
-
-        if (oper.equals("+")) return a + b;
-        else if (oper.equals("-")) return a - b;
-        else if (oper.equals("*")) return a * b;
-        else return a / b;
-    }
-
 }
 
 class Roman {
@@ -108,17 +153,3 @@ class Roman {
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
